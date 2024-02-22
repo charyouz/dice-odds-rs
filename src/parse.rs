@@ -60,7 +60,7 @@ pub(crate) fn parse_dice_str(dice_str: &str) -> Result<Die, ParseError> {
 
 #[cfg(test)]
 mod tests {
-    use super::*
+    use super::*;
 
     #[test]
     fn test_parse_dice_str() {
