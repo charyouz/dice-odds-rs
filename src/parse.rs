@@ -24,10 +24,18 @@ impl FromStr for DiceSize {
         }
 }
 
+impl From<DiceSize> for usize {
+    fn from(d: DiceSize) -> Self {
+        match d {
+            DiceSize::D6 => 6,
+        }
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub(crate) struct Die {
     pub size: DiceSize,
-    pub req_value: u8,
+    pub req_value: usize,
     pub above_below: String,
 }
 
@@ -38,18 +46,28 @@ pub(crate) struct Roll {
     pub amount: NonZeroU8,
 }
 
+#[derive(Debug, PartialEq)]
+pub(crate) struct FullRoll {
+    pub rolls: Vec<Roll>,
+    pub total_dice: NonZeroU8,
+}
+
 pub(crate) fn parse_dice_str(dice_str: &str) -> Result<Roll, ParseError> {
-    let dice_regex = Regex::new(r"^([1-9]\d*)?d?(\d+)(\+?\-?)$").unwrap();
+    let dice_regex = Regex::new(r"^([1-9]\d*)?x?([1-9]\d*)?d?(\d+)(\+?\-?)$").unwrap();
     let caps = dice_regex.captures(dice_str).ok_or(ParseError::UnableToParse)?;
     let dice_amount = caps.get(1)
         .ok_or(ParseError::InvalidDicenumber)?
         .as_str().parse::<NonZeroU8>()
         .map_err(|_| {ParseError::InvalidDicenumber})?;
-    let dice_req = caps.get(2)
+    let dice_sides = caps.get(2)
+        .ok_or(ParseError::InvalidDiceSize)?
+        .as_str().parse::<String>()
+        .map_err(|_| {ParseError::InvalidDicenumber})?;
+    let dice_req = caps.get(3)
         .ok_or(ParseError::InvalidDiceSize)?
         .as_str()
-        .parse::<u8>();
-    let dice_min_max = caps.get(3)
+        .parse::<usize>();
+    let dice_min_max = caps.get(4)
         .ok_or(ParseError::UnableToParse)?
         .as_str()
         .parse::<String>();
@@ -57,7 +75,7 @@ pub(crate) fn parse_dice_str(dice_str: &str) -> Result<Roll, ParseError> {
     Ok(Roll {
         amount: dice_amount,
         dice: Die {
-            size: DiceSize::from_str("6").unwrap(),
+            size: DiceSize::from_str(&dice_sides).unwrap(),
             req_value: dice_req.unwrap(),
             above_below: dice_min_max.unwrap(),
     }
@@ -79,7 +97,9 @@ mod tests {
                 above_below: "+".to_string(),
             }
         };
-        let foo2 = parse_dice_str("3d5+").unwrap();
+        let foo2 = parse_dice_str("3x6d5+").unwrap();
         assert_eq!(foo, foo2);
+        // let foo3 = parse_dice_str("3x5+").unwrap();
+        // assert_eq!(foo, foo3);
     }
 }
