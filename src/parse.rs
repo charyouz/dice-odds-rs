@@ -53,31 +53,47 @@ pub(crate) struct FullRoll {
 }
 
 pub(crate) fn parse_dice_str(dice_str: &str) -> Result<Roll, ParseError> {
+    let dice_amount: NonZeroU8;
+    let dice_sides: String;
+    let dice_min_max: String;
+
     let dice_regex = Regex::new(r"^([1-9]\d*)?x?([1-9]\d*)?d?(\d+)(\+?\-?)$").unwrap();
     let caps = dice_regex.captures(dice_str).ok_or(ParseError::UnableToParse)?;
-    let dice_amount = caps.get(1)
-        .ok_or(ParseError::InvalidDicenumber)?
-        .as_str().parse::<NonZeroU8>()
-        .map_err(|_| {ParseError::InvalidDicenumber})?;
-    let dice_sides = caps.get(2)
-        .ok_or(ParseError::InvalidDiceSize)?
-        .as_str().parse::<String>()
-        .map_err(|_| {ParseError::InvalidDicenumber})?;
+    if caps.get(1).is_none() {
+    dice_amount = NonZeroU8::new(1).unwrap();
+    } else {
+        dice_amount = caps.get(1)
+            .ok_or(ParseError::InvalidDicenumber)?
+            .as_str().parse::<NonZeroU8>()
+            .map_err(|_| {ParseError::InvalidDicenumber})?;
+    }
+    if caps.get(2).is_none() {
+        dice_sides = "6".to_string();
+    } else {
+        dice_sides = caps.get(2)
+            .ok_or(ParseError::InvalidDiceSize)?
+            .as_str().parse::<String>()
+            .map_err(|_| {ParseError::InvalidDicenumber})?;
+    }
     let dice_req = caps.get(3)
         .ok_or(ParseError::InvalidDiceSize)?
         .as_str()
         .parse::<usize>();
-    let dice_min_max = caps.get(4)
-        .ok_or(ParseError::UnableToParse)?
-        .as_str()
-        .parse::<String>();
+    if caps.get(4).is_none() {
+        dice_min_max = "+".to_string();
+    } else {
+        dice_min_max = caps.get(4)
+            .ok_or(ParseError::UnableToParse)?
+            .as_str()
+            .parse::<String>().unwrap();
+    }
 
     Ok(Roll {
         amount: dice_amount,
         dice: Die {
             size: DiceSize::from_str(&dice_sides).unwrap(),
             req_value: dice_req.unwrap(),
-            above_below: dice_min_max.unwrap(),
+            above_below: dice_min_max,
     }
     })
 }
@@ -99,7 +115,16 @@ mod tests {
         };
         let foo2 = parse_dice_str("3x6d5+").unwrap();
         assert_eq!(foo, foo2);
-        // let foo3 = parse_dice_str("3x5+").unwrap();
-        // assert_eq!(foo, foo3);
+        let foo3 = parse_dice_str("3x5+").unwrap();
+        assert_eq!(foo, foo3);
+        let foo4 = Roll {
+            amount: NonZeroU8::new(1).unwrap(),
+            dice: Die {
+                size: DiceSize::from_str("6").unwrap(),
+                req_value: 3,
+                above_below: "-".to_string(),
+            }
+        };
+        assert_eq!(foo4, parse_dice_str("3-").unwrap());
     }
 }
