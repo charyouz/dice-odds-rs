@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use crate::parse::{FullRoll, Die};
+use crate::parse::{FullRoll, Roll, Die};
 use core::result::Result;
 
 pub(crate) fn calculate_odds(roll: &FullRoll) {
@@ -16,7 +16,7 @@ pub(crate) enum CalcError {
     InvalidMaxValue,
 }
 
-fn calculate_die_odd(die: &Die) -> Result<f64, CalcError> {
+pub(crate) fn calculate_die_odd(die: &Die) -> Result<f64, CalcError> {
     let odds: f64;
     let above: f64;
     if die.req_value > usize::from(die.size) && die.above_below == "+" {
@@ -43,12 +43,20 @@ fn calculate_die_odd(die: &Die) -> Result<f64, CalcError> {
 }
 
 
+/// CAclucalte te odds if for a roll where all the dice havethe same requirements.
+pub(crate) fn calculate_roll_odds(roll: &Roll) -> f64 {
+    let dice_amount = roll.amount;
+    let die_odd = calculate_die_odd(&roll.dice).unwrap();
+    let odds = die_odd.powi(dice_amount.get().into());
+    odds
+}
 
 
 #[cfg(test)]
 mod tests{
     use super::*;
     use crate::parse::DiceSize;
+    use std::num::NonZeroU8;
 
     #[test]
     fn test_calculate_die_odd() {
@@ -79,6 +87,19 @@ mod tests{
             above_below: "-".to_string(),
         };
         assert_eq!(calculate_die_odd(&faulty_die2), Err(CalcError::InvalidMinValue));
+    }
+
+    #[test]
+    fn test_calculate_roll_odds() {
+        let test_roll = Roll {
+            dice: Die {
+                size: DiceSize::D6,
+                req_value: 4,
+                above_below: "+".to_string(),
+            },
+            amount: NonZeroU8::new(2).unwrap(),
+        };
+        assert_eq!(calculate_roll_odds(&test_roll), 0.25);
     }
 
 }
