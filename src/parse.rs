@@ -24,6 +24,8 @@ impl FromStr for DiceSize {
         }
 }
 
+
+/// Different die sizes
 impl From<DiceSize> for usize {
     fn from(d: DiceSize) -> Self {
         match d {
@@ -32,6 +34,8 @@ impl From<DiceSize> for usize {
     }
 }
 
+
+/// A single die, with its' size (amount of faces), requirement value, and if the result shuld be above or below the value.
 #[derive(Debug, PartialEq)]
 pub(crate) struct Die {
     pub size: DiceSize,
@@ -40,12 +44,15 @@ pub(crate) struct Die {
 }
 
 
+/// A roll of dice, where the dice in it should be the same, e.g. 3 dice that need to be 4 or more.
 #[derive(Debug, PartialEq)]
 pub(crate) struct Roll {
     pub dice: Die,
     pub amount: NonZeroU8,
 }
 
+
+/// All of the dice in the roll
 #[derive(Debug, PartialEq)]
 pub(crate) struct FullRoll {
     pub rolls: Vec<Roll>,
