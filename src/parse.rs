@@ -59,12 +59,15 @@ pub(crate) struct FullRoll {
     pub total_dice: NonZeroU8,
 }
 
+
+/// Parses string to dice and roll.
+/// Input should be in the format <number of dice>x<dice face number>d<wanted number><+/- if the wanted number is higher or lower>
 pub(crate) fn parse_dice_str(dice_str: &str) -> Result<Roll, ParseError> {
     let dice_amount: NonZeroU8;
     let dice_sides: String;
     let dice_min_max: String;
 
-    let dice_regex = Regex::new(r"^([1-9]\d*)?x?([1-9]\d*)?d?(\d+)(\+?\-?)$").unwrap();
+    let dice_regex = Regex::new(r"([1-9]\d*)?x?([1-9]\d*)?d?(\d+)(\+?\-?)").unwrap();
     let caps = dice_regex.captures(dice_str).ok_or(ParseError::UnableToParse)?;
     if caps.get(1).is_none() {
     dice_amount = NonZeroU8::new(1).unwrap();
