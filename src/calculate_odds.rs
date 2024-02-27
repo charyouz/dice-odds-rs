@@ -16,6 +16,8 @@ pub(crate) enum CalcError {
     InvalidMaxValue,
 }
 
+
+/// Calculate the odd of one die being the required number.
 pub(crate) fn calculate_die_odd(die: &Die) -> Result<f64, CalcError> {
     let odds: f64;
     let above: f64;
@@ -43,7 +45,7 @@ pub(crate) fn calculate_die_odd(die: &Die) -> Result<f64, CalcError> {
 }
 
 
-/// CAclucalte te odds if for a roll where all the dice havethe same requirements.
+/// Calculate the odds for a roll where all the dice have the same requirements.
 pub(crate) fn calculate_roll_odds(roll: &Roll) -> f64 {
     let dice_amount = roll.amount;
     let die_odd = calculate_die_odd(&roll.dice).unwrap();
