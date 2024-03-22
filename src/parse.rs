@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use std::num::NonZeroU8;
 use std::str::FromStr;
 use regex::Regex;
@@ -24,6 +26,8 @@ impl FromStr for DiceSize {
         }
 }
 
+
+/// Different die sizes
 impl From<DiceSize> for usize {
     fn from(d: DiceSize) -> Self {
         match d {
@@ -32,6 +36,8 @@ impl From<DiceSize> for usize {
     }
 }
 
+
+/// A single die, with its' size (amount of faces), requirement value, and if the result shuld be above or below the value.
 #[derive(Debug, PartialEq)]
 pub(crate) struct Die {
     pub size: DiceSize,
@@ -40,24 +46,30 @@ pub(crate) struct Die {
 }
 
 
+/// A roll of dice, where the dice in it should be the same, e.g. 3 dice that need to be 4 or more.
 #[derive(Debug, PartialEq)]
 pub(crate) struct Roll {
     pub dice: Die,
     pub amount: NonZeroU8,
 }
 
+
+/// All of the dice in the roll
 #[derive(Debug, PartialEq)]
 pub(crate) struct FullRoll {
     pub rolls: Vec<Roll>,
     pub total_dice: NonZeroU8,
 }
 
+
+/// Parses string to dice and roll.
+/// Input should be in the format <number of dice>x<dice face number>d<wanted number><+/- if the wanted number is higher or lower>
 pub(crate) fn parse_dice_str(dice_str: &str) -> Result<Roll, ParseError> {
     let dice_amount: NonZeroU8;
     let dice_sides: String;
     let dice_min_max: String;
 
-    let dice_regex = Regex::new(r"^([1-9]\d*)?x?([1-9]\d*)?d?(\d+)(\+?\-?)$").unwrap();
+    let dice_regex = Regex::new(r"([1-9]\d*)?x?([1-9]\d*)?d?(\d+)(\+?\-?)").unwrap();
     let caps = dice_regex.captures(dice_str).ok_or(ParseError::UnableToParse)?;
     if caps.get(1).is_none() {
     dice_amount = NonZeroU8::new(1).unwrap();
