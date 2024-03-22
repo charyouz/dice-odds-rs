@@ -1,4 +1,6 @@
 use std::env;
+use itertools::Itertools;
+use std::num::NonZeroU8;
 //use clap::Parser;
 
 mod calculate_odds;
@@ -39,11 +41,11 @@ fn main() {
         rolls.push(parse::parse_dice_str(arg).unwrap());
     }
     if commands.contains(&"-e".to_string()) {
-        println!("Calculating expected value from {}...", arguments[0]);
+        println!("=== Expected value calculation ===");
+        println!("This shows only the full amount of successful dice (e.g. no fractions)!");
+        println!("Calculating expected value from {}...", arguments.iter().format(" -> "));
         output = "Expected number of successful dice:".to_string();
-        for roll in rolls {
-            odds = expected_value::calculate_expected_amount(&roll).unwrap();
-        }
+        odds = expected_value_function(&rolls);
     }
     else {
         for roll in rolls {
@@ -51,4 +53,29 @@ fn main() {
         }
     }
     println!("{} {}", output, odds);
+}
+
+
+fn expected_value_function(rolls: &Vec<parse::Roll>) -> f64 {
+    let mut odds: f64 = 0.0;
+    let mut dices: u8;
+    let mut subs_rolls = parse::Roll {
+        dice: parse::Die {
+            size: rolls[0].dice.size.clone(),
+            req_value: rolls[0].dice.req_value,
+            above_below: "+".to_string(),
+        },
+        amount: rolls[0].amount,
+        };
+    for i in 0..rolls.len() {
+        subs_rolls.dice.req_value = rolls[i].dice.req_value;
+        subs_rolls.dice.above_below = rolls[i].dice.above_below.clone();
+        odds = expected_value::calculate_expected_amount(&subs_rolls).unwrap();
+        dices = odds.round_ties_even() as u8;
+        if dices == 0 {
+           return 0.0
+        }
+        subs_rolls.amount = NonZeroU8::new(dices).unwrap();
+    }
+   return odds
 }
