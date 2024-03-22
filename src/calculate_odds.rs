@@ -14,6 +14,7 @@ pub(crate) fn calculate_odds(roll: &FullRoll) {
 pub(crate) enum CalcError {
     InvalidMinValue,
     InvalidMaxValue,
+    InvalidDieSize,
 }
 
 
