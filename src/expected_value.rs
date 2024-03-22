@@ -43,11 +43,21 @@ mod tests{
             req_value: 4,
             above_below: "+".to_string(),
         };
-        let test_roll = Roll {
+        let mut test_roll = Roll {
             dice: test_die,
             amount: NonZeroU8::new(4).unwrap(),
         };
+        //Test with 4 dice, 4 or more (1/2)
         assert_eq!(calculate_expected_amount(&test_roll).unwrap(), 2.0);
+
+        //Test with 3 dice, 4 or less (2/3)
+        test_roll.dice.above_below = "-".to_string();
+        test_roll.amount = NonZeroU8::new(3).unwrap();
+        assert_eq!(calculate_expected_amount(&test_roll).unwrap(), 2.0);
+
+        //Test with 4 dice, 5 or less (5/6)
+        test_roll.dice.req_value = 5;
+        assert_eq!(calculate_expected_amount(&test_roll).unwrap(), 2.5);
     }
 
 }
