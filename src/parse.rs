@@ -47,7 +47,7 @@ pub(crate) struct Die {
     pub size: DiceSize,
     #[builder(default="1")]
     pub req_value: usize,
-    #[builder(default)]
+    #[builder(default="\"+\".to_string()")]
     pub above_below: String,
 }
 
@@ -58,7 +58,7 @@ pub(crate) struct Roll {
     pub dice: Die,
     #[builder(default="NonZeroU8::new(1).unwrap()")]
     pub amount: NonZeroU8,
-    #[builder(default)]
+    #[builder(default="\"\".to_string()")]
     pub extra_info: String,
 }
 
