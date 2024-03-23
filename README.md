@@ -35,7 +35,7 @@ So a command to roll 8 6-sided dice for 4+ and re-rolling failing would be:
 
 if you want to continue the logic, rolling the dice again for 4+ and re-rolling successes would be:
 ```
-8x6d4+_r 4+_R
+8x6d4+_r d4+_R
 ```
 
 ## Getting Started
