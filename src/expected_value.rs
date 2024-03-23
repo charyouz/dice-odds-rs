@@ -46,6 +46,7 @@ mod tests{
         let mut test_roll = Roll {
             dice: test_die,
             amount: NonZeroU8::new(4).unwrap(),
+            extra_info: "".to_string(),
         };
         //Test with 4 dice, 4 or more (1/2)
         assert_eq!(calculate_expected_amount(&test_roll).unwrap(), 2.0);

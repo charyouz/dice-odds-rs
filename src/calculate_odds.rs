@@ -101,6 +101,7 @@ mod tests{
                 above_below: "+".to_string(),
             },
             amount: NonZeroU8::new(2).unwrap(),
+            extra_info: "".to_string(),
         };
         assert_eq!(calculate_roll_odds(&test_roll), 0.25);
     }

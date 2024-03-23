@@ -59,14 +59,8 @@ fn main() {
 fn expected_value_function(rolls: &Vec<parse::Roll>) -> f64 {
     let mut odds: f64 = 0.0;
     let mut dices: u8;
-    let mut subs_rolls = parse::Roll {
-        dice: parse::Die {
-            size: rolls[0].dice.size.clone(),
-            req_value: rolls[0].dice.req_value,
-            above_below: "+".to_string(),
-        },
-        amount: rolls[0].amount,
-        };
+    let subt_die = parse::DieBuilder::default().size(rolls[0].dice.size.clone()).req_value(rolls[0].dice.req_value).build().unwrap();
+    let mut subs_rolls = parse::RollBuilder::default().dice(subt_die).amount(rolls[0].amount).build().unwrap();
     for i in 0..rolls.len() {
         subs_rolls.dice.req_value = rolls[i].dice.req_value;
         subs_rolls.dice.above_below = rolls[i].dice.above_below.clone();

@@ -3,6 +3,7 @@
 use std::num::NonZeroU8;
 use std::str::FromStr;
 use regex::Regex;
+use derive_builder::Builder;
 
 #[derive(Debug, PartialEq)]
 pub(crate) enum ParseError {
@@ -38,19 +39,24 @@ impl From<DiceSize> for usize {
 
 
 /// A single die, with its' size (amount of faces), requirement value, and if the result shuld be above or below the value.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Builder)]
 pub(crate) struct Die {
     pub size: DiceSize,
+    #[builder(default="1")]
     pub req_value: usize,
+    #[builder(default)]
     pub above_below: String,
 }
 
 
 /// A roll of dice, where the dice in it should be the same, e.g. 3 dice that need to be 4 or more.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Builder)]
 pub(crate) struct Roll {
     pub dice: Die,
+    #[builder(default="NonZeroU8::new(1).unwrap()")]
     pub amount: NonZeroU8,
+    #[builder(default)]
+    pub extra_info: String,
 }
 
 
@@ -68,8 +74,9 @@ pub(crate) fn parse_dice_str(dice_str: &str) -> Result<Roll, ParseError> {
     let dice_amount: NonZeroU8;
     let dice_sides: String;
     let dice_min_max: String;
+    let ext_inf: String;
 
-    let dice_regex = Regex::new(r"([1-9]\d*)?x?([1-9]\d*)?d?(\d+)(\+?\-?)").unwrap();
+    let dice_regex = Regex::new(r"([1-9]\d*)?x?([1-9]\d*)?d?(\d+)(\+?\-?)_?(.*)?").unwrap();
     let caps = dice_regex.captures(dice_str).ok_or(ParseError::UnableToParse)?;
     if caps.get(1).is_none() {
     dice_amount = NonZeroU8::new(1).unwrap();
@@ -93,11 +100,21 @@ pub(crate) fn parse_dice_str(dice_str: &str) -> Result<Roll, ParseError> {
         .parse::<usize>();
     if caps.get(4).is_none() {
         dice_min_max = "+".to_string();
-    } else {
+    }
+    else {
         dice_min_max = caps.get(4)
             .ok_or(ParseError::UnableToParse)?
             .as_str()
             .parse::<String>().unwrap();
+    }
+    if caps.get(5).is_none(){
+        ext_inf = "".to_string();
+    }
+    else {
+        ext_inf = caps.get(5)
+        .ok_or(ParseError::UnableToParse)?
+        .as_str()
+        .parse::<String>().unwrap();
     }
 
     Ok(Roll {
@@ -106,7 +123,8 @@ pub(crate) fn parse_dice_str(dice_str: &str) -> Result<Roll, ParseError> {
             size: DiceSize::from_str(&dice_sides).unwrap(),
             req_value: dice_req.unwrap(),
             above_below: dice_min_max,
-    }
+        },
+        extra_info: ext_inf,
     })
 }
 
@@ -123,7 +141,8 @@ mod tests {
                 size: DiceSize::from_str("6").unwrap(),
                 req_value: 5,
                 above_below: "+".to_string(),
-            }
+            },
+            extra_info: "".to_string(),
         };
         let foo2 = parse_dice_str("3x6d5+").unwrap();
         assert_eq!(foo, foo2);
@@ -135,7 +154,8 @@ mod tests {
                 size: DiceSize::from_str("6").unwrap(),
                 req_value: 3,
                 above_below: "-".to_string(),
-            }
+            },
+            extra_info: "".to_string(),
         };
         assert_eq!(foo4, parse_dice_str("3-").unwrap());
     }
