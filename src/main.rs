@@ -20,7 +20,6 @@ mod die_errors;
 
 
 fn main() {
-    println!("Input dice as <amount>x<die face amount>d<wanted value>");
     //let a = Args::parse();
     let mut args: Vec<String> = env::args().collect();
     let mut odds: f64 = 0.0;
