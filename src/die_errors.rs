@@ -11,5 +11,10 @@ pub(crate) enum CalcError {
 pub(crate) enum ParseError {
     InvalidDicenumber,
     InvalidDiceSize,
-    UnableToPartse,
+    UnableToParse,
+}
+
+#[derive(Debug, PartialEq)]
+pub(crate) enum DieError {
+    InvalidSetting,
 }

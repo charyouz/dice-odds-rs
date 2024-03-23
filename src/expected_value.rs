@@ -1,8 +1,9 @@
 #![allow(dead_code)]
 
-use crate::parse::Roll;
+use crate::dice::{Roll};
 use core::result::Result;
-use crate::die_errors::CalcError;
+use crate::die_errors::{ParseError, CalcError};
+use regex::Regex;
 
 pub(crate) fn calculate_expected_amount(roll: &Roll) -> Result<f64, CalcError> {
     let odds: f64;
@@ -28,11 +29,48 @@ pub(crate) fn calculate_expected_amount(roll: &Roll) -> Result<f64, CalcError> {
     Ok(odds)
 }
 
+pub fn parse_extra_info(roll: &mut Roll) -> () {
+    if roll.extra_info.is_empty() {
+        return
+    }
+    let reg = Regex::new("([a-zA-Z][0-9]?)").unwrap();
+    let info = roll.extra_info.clone();
+    let caps = reg.captures(&info).ok_or(ParseError::UnableToParse).unwrap();
+    for i in 0..caps.len() {
+        if caps.get(i).is_some(){
+            let input = caps.get(i).ok_or("asdf").unwrap().as_str(); // TODO
+            if input.len() == 1 {
+                //Only letter
+                match input {
+                    "R" => roll.set_reroll_suc(true),
+                    "r" => roll.set_reroll_fail(true),
+                    _ => println!("Urecognized command {}", input),
+                }
+            }
+            else {
+                //Letter and number(s)
+                let (letter, number) = input.split_at(0);
+                match letter {
+                    "R" => {
+                        roll.set_reroll_suc(true);
+                        roll.set_reroll_face_amount(number.parse::<i32>().unwrap().try_into().unwrap());
+                    },
+                    "r" => {
+                        roll.set_reroll_suc(true);
+                        roll.set_reroll_face_amount(number.parse::<i32>().unwrap().try_into().unwrap());
+                    },
+                    _ => println!("Letter: {}", letter), // TODO
+
+            }
+        }
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests{
     use super::*;
-    use crate::parse::{DiceSize, DieBuilder, RollBuilder};
+    use crate::dice::{DiceSize, DieBuilder, RollBuilder};
     use std::num::NonZeroU8;
 
     #[test]

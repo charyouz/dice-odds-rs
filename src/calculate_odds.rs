@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use crate::parse::{FullRoll, Roll, Die};
+use crate::dice::{FullRoll, Roll, Die};
 use core::result::Result;
 use crate::die_errors::CalcError;
 
@@ -52,7 +52,7 @@ pub(crate) fn calculate_roll_odds(roll: &Roll) -> f64 {
 #[cfg(test)]
 mod tests{
     use super::*;
-    use crate::parse::{DiceSize, DieBuilder, RollBuilder};
+    use crate::dice::{DiceSize, DieBuilder, RollBuilder};
     use std::num::NonZeroU8;
 
     #[test]

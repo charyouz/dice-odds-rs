@@ -1,84 +1,14 @@
 #![allow(dead_code)]
 
-use std::num::NonZeroU8;
 use std::str::FromStr;
+use std::num::NonZeroU8;
 use regex::Regex;
-use derive_builder::Builder;
-
-#[derive(Debug, PartialEq)]
-pub(crate) enum ParseError {
-    InvalidDicenumber,
-    InvalidDiceSize,
-    UnableToParse,
-}
-
-#[derive(Debug, PartialEq, Copy, Clone)]
-pub(crate) enum DiceSize {
-    D3,
-    D6,
-}
-
-impl FromStr for DiceSize {
-    type Err = ParseError;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "3" => Ok(DiceSize::D3),
-            "6" => Ok(DiceSize::D6),
-            _ => Err(ParseError::InvalidDiceSize)
-            }
-        }
-}
-
-
-/// Different die sizes
-impl From<DiceSize> for usize {
-    fn from(d: DiceSize) -> Self {
-        match d {
-            DiceSize::D3 => 3,
-            DiceSize::D6 => 6,
-        }
-    }
-}
-
-
-/// A single die, with its' size (amount of faces), requirement value, and if the result shuld be above or below the value.
-#[derive(Debug, PartialEq, Clone, Builder)]
-pub(crate) struct Die {
-    pub size: DiceSize,
-    #[builder(default="1")]
-    pub req_value: usize,
-    #[builder(default="\"+\".to_string()")]
-    pub above_below: String,
-}
-
-
-/// A roll of dice, where the dice in it should be the same, e.g. 3 dice that need to be 4 or more.
-#[derive(Debug, PartialEq, Builder)]
-pub(crate) struct Roll {
-    pub dice: Die,
-    #[builder(default="NonZeroU8::new(1).unwrap()")]
-    pub amount: NonZeroU8,
-    #[builder(default="\"\".to_string()")]
-    pub extra_info: String,
-    #[builder(default="0")]
-    pub re_rolls: usize,
-    #[builder(default="false")]
-    pub re_roll_suc: bool,
-    #[builder(default="false")]
-    pub re_roll_fail: bool,
-}
-
-
-/// All of the dice in the roll
-#[derive(Debug, PartialEq)]
-pub(crate) struct FullRoll {
-    pub rolls: Vec<Roll>,
-    pub total_dice: NonZeroU8,
-}
-
+use crate::die_errors::ParseError;
+use crate::dice::{DiceSize, Roll, DieBuilder, RollBuilder};
 
 /// Parses string to dice and roll.
 /// Input should be in the format <number of dice>x<dice face number>d<wanted number><+/- if the wanted number is higher or lower>
+// After this, there can be anything behind an underscore, this will be tested later
 pub(crate) fn parse_dice_str(dice_str: &str) -> Result<Roll, ParseError> {
     let dice_amount: NonZeroU8;
     let dice_sides: String;
@@ -135,7 +65,7 @@ pub(crate) fn parse_dice_str(dice_str: &str) -> Result<Roll, ParseError> {
     let output = RollBuilder::default()
         .amount(dice_amount)
         .dice(output_die)
-        .extra_info(ext_inf)
+        .extra_info(ext_inf.clone())
         .build().unwrap();
 
     Ok(output)
