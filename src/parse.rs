@@ -14,6 +14,7 @@ pub(crate) enum ParseError {
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub(crate) enum DiceSize {
+    D3,
     D6,
 }
 
@@ -21,6 +22,7 @@ impl FromStr for DiceSize {
     type Err = ParseError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
+            "3" => Ok(DiceSize::D3),
             "6" => Ok(DiceSize::D6),
             _ => Err(ParseError::InvalidDiceSize)
             }
@@ -32,6 +34,7 @@ impl FromStr for DiceSize {
 impl From<DiceSize> for usize {
     fn from(d: DiceSize) -> Self {
         match d {
+            DiceSize::D3 => 3,
             DiceSize::D6 => 6,
         }
     }
@@ -87,7 +90,7 @@ pub(crate) fn parse_dice_str(dice_str: &str) -> Result<Roll, ParseError> {
             .map_err(|_| {ParseError::InvalidDicenumber})?;
     }
     if caps.get(2).is_none() {
-        dice_sides = "6".to_string();
+        dice_sides = "6".to_string(); //Defaults to D6, maybe should be handled somehow else?
     } else {
         dice_sides = caps.get(2)
             .ok_or(ParseError::InvalidDiceSize)?
