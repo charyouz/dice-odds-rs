@@ -38,7 +38,7 @@ pub fn parse_extra_info(roll: &mut Roll) -> () {
     let caps = reg.captures(&info).ok_or(ParseError::UnableToParse).unwrap();
     for i in 0..caps.len() {
         if caps.get(i).is_some(){
-            let input = caps.get(i).ok_or("asdf").unwrap().as_str(); // TODO
+            let input = caps.get(i).ok_or(ParseError::UnableToParse).unwrap().as_str(); // TODO
             if input.len() == 1 {
                 //Only letter
                 match input {
@@ -56,10 +56,10 @@ pub fn parse_extra_info(roll: &mut Roll) -> () {
                         roll.set_reroll_face_amount(number.parse::<i32>().unwrap().try_into().unwrap());
                     },
                     "r" => {
-                        roll.set_reroll_suc(true);
+                        roll.set_reroll_fail(true);
                         roll.set_reroll_face_amount(number.parse::<i32>().unwrap().try_into().unwrap());
                     },
-                    _ => println!("Letter: {}", letter), // TODO
+                    _ => println!("Unrecognized command: {}", letter), // TODO
 
             }
         }
@@ -91,4 +91,14 @@ mod tests{
         assert_eq!(calculate_expected_amount(&test_roll).unwrap(), 2.5);
     }
 
+    #[test]
+    fn test_parse_extra_info() {
+        let test_die = DieBuilder::default().size(DiceSize::D6).req_value(4).build().unwrap();
+        let mut test_roll = RollBuilder::default().dice(test_die.clone())
+            .amount(NonZeroU8::new(4).unwrap()).extra_info("r".to_string()).build().unwrap();
+        let test_roll1 = RollBuilder::default().dice(test_die.clone())
+            .amount(NonZeroU8::new(4).unwrap()).re_roll_fail(true).extra_info("r".to_string()).build().unwrap();
+        parse_extra_info(&mut test_roll);
+        assert_eq!(test_roll, test_roll1);
+    }
 }
