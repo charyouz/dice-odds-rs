@@ -60,6 +60,12 @@ pub(crate) struct Roll {
     pub amount: NonZeroU8,
     #[builder(default="\"\".to_string()")]
     pub extra_info: String,
+    #[builder(default="0")]
+    pub re_rolls: usize,
+    #[builder(default="false")]
+    pub re_roll_suc: bool,
+    #[builder(default="false")]
+    pub re_roll_fail: bool,
 }
 
 
@@ -120,15 +126,19 @@ pub(crate) fn parse_dice_str(dice_str: &str) -> Result<Roll, ParseError> {
         .parse::<String>().unwrap();
     }
 
-    Ok(Roll {
-        amount: dice_amount,
-        dice: Die {
-            size: DiceSize::from_str(&dice_sides).unwrap(),
-            req_value: dice_req.unwrap(),
-            above_below: dice_min_max,
-        },
-        extra_info: ext_inf,
-    })
+    //Build output struct
+    let output_die = DieBuilder::default()
+        .size(DiceSize::from_str(&dice_sides).unwrap())
+        .req_value(dice_req.unwrap())
+        .above_below(dice_min_max)
+        .build().unwrap();
+    let output = RollBuilder::default()
+        .amount(dice_amount)
+        .dice(output_die)
+        .extra_info(ext_inf)
+        .build().unwrap();
+
+    Ok(output)
 }
 
 
@@ -138,28 +148,15 @@ mod tests {
 
     #[test]
     fn test_parse_dice_str() {
-        let foo = Roll {
-            amount: NonZeroU8::new(3).unwrap(),
-            dice: Die {
-                size: DiceSize::from_str("6").unwrap(),
-                req_value: 5,
-                above_below: "+".to_string(),
-            },
-            extra_info: "".to_string(),
-        };
+        let mut test_die = DieBuilder::default().size(DiceSize::from_str("6").unwrap()).req_value(5).above_below("+".to_string()).build().unwrap();
+        let foo = RollBuilder::default().amount(NonZeroU8::new(3).unwrap()).dice(test_die.clone()).build().unwrap();
         let foo2 = parse_dice_str("3x6d5+").unwrap();
         assert_eq!(foo, foo2);
         let foo3 = parse_dice_str("3x5+").unwrap();
         assert_eq!(foo, foo3);
-        let foo4 = Roll {
-            amount: NonZeroU8::new(1).unwrap(),
-            dice: Die {
-                size: DiceSize::from_str("6").unwrap(),
-                req_value: 3,
-                above_below: "-".to_string(),
-            },
-            extra_info: "".to_string(),
-        };
+        test_die.req_value = 3;
+        test_die.above_below = "-".to_string();
+        let foo4 = RollBuilder::default().amount(NonZeroU8::new(1).unwrap()).dice(test_die.clone()).build().unwrap();
         assert_eq!(foo4, parse_dice_str("3-").unwrap());
     }
 }

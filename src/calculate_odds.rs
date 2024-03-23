@@ -52,7 +52,7 @@ pub(crate) fn calculate_roll_odds(roll: &Roll) -> f64 {
 #[cfg(test)]
 mod tests{
     use super::*;
-    use crate::parse::DiceSize;
+    use crate::parse::{DiceSize, DieBuilder, RollBuilder};
     use std::num::NonZeroU8;
 
     #[test]
@@ -88,15 +88,8 @@ mod tests{
 
     #[test]
     fn test_calculate_roll_odds() {
-        let test_roll = Roll {
-            dice: Die {
-                size: DiceSize::D6,
-                req_value: 4,
-                above_below: "+".to_string(),
-            },
-            amount: NonZeroU8::new(2).unwrap(),
-            extra_info: "".to_string(),
-        };
+        let test_die = DieBuilder::default().size(DiceSize::D6).req_value(4).above_below("+".to_string()).build().unwrap();
+        let test_roll = RollBuilder::default().dice(test_die).amount(NonZeroU8::new(2).unwrap()).build().unwrap();
         assert_eq!(calculate_roll_odds(&test_roll), 0.25);
     }
 

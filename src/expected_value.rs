@@ -32,22 +32,14 @@ pub(crate) fn calculate_expected_amount(roll: &Roll) -> Result<f64, CalcError> {
 #[cfg(test)]
 mod tests{
     use super::*;
-    use crate::parse::{DiceSize, Die};
+    use crate::parse::{DiceSize, DieBuilder, RollBuilder};
     use std::num::NonZeroU8;
 
     #[test]
     fn test_calculate_expected_value() {
         //Check that simple calculation works
-        let test_die = Die {
-            size: DiceSize::D6,
-            req_value: 4,
-            above_below: "+".to_string(),
-        };
-        let mut test_roll = Roll {
-            dice: test_die,
-            amount: NonZeroU8::new(4).unwrap(),
-            extra_info: "".to_string(),
-        };
+        let test_die = DieBuilder::default().size(DiceSize::D6).req_value(4).build().unwrap();
+        let mut test_roll = RollBuilder::default().dice(test_die).amount(NonZeroU8::new(4).unwrap()).build().unwrap();
         //Test with 4 dice, 4 or more (1/2)
         assert_eq!(calculate_expected_amount(&test_roll).unwrap(), 2.0);
 
