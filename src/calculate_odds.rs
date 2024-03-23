@@ -2,19 +2,13 @@
 
 use crate::parse::{FullRoll, Roll, Die};
 use core::result::Result;
+use crate::die_errors::CalcError;
 
 pub(crate) fn calculate_odds(roll: &FullRoll) {
     let _total_dice = roll.total_dice;
     for _roll_ in &roll.rolls {
         todo!();
     };
-}
-
-#[derive(Debug, PartialEq, Eq)]
-pub(crate) enum CalcError {
-    InvalidMinValue,
-    InvalidMaxValue,
-    InvalidDieSize,
 }
 
 
