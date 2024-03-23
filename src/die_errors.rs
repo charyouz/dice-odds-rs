@@ -6,3 +6,10 @@ pub(crate) enum CalcError {
     InvalidMaxValue,
     InvalidDieSize,
 }
+
+#[derive(Debug, PartialEq)]
+pub(crate) enum ParseError {
+    InvalidDicenumber,
+    InvalidDiceSize,
+    UnableToPartse,
+}
