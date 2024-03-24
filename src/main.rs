@@ -69,12 +69,12 @@ fn expected_value_function(rolls: &Vec<dice::Roll>) -> f64 {
         subs_rolls.dice.req_value = rolls[i].dice.req_value;
         subs_rolls.dice.above_below = rolls[i].dice.above_below.clone();
         odds = expected_value::calculate_expected_amount(&subs_rolls).unwrap();
-        dices = odds.round_ties_even() as u8;
+        dices = odds.round() as u8;
         if rolls[i].re_roll_fail {
             buf = dices.clone();
             subs_rolls.amount = NonZeroU8::new(subs_rolls.amount.get() - dices).unwrap();
             odds = expected_value::calculate_expected_amount(&subs_rolls).unwrap() + buf as f64;
-            dices = odds.round_ties_even() as u8;
+            dices = odds.round() as u8;
         }
         if dices == 0 {
             return 0.0
@@ -82,7 +82,7 @@ fn expected_value_function(rolls: &Vec<dice::Roll>) -> f64 {
         subs_rolls.amount = NonZeroU8::new(dices).unwrap();
         if rolls[i].re_roll_suc {
             odds = expected_value::calculate_expected_amount(&subs_rolls).unwrap();
-            dices = odds.round_ties_even() as u8;
+            dices = odds.round() as u8;
             subs_rolls.amount = NonZeroU8::new(dices).unwrap();
         }
         if dices == 0 {
