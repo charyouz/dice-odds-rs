@@ -1,75 +1,21 @@
 #![allow(dead_code)]
 
-use std::num::NonZeroU8;
 use std::str::FromStr;
+use std::num::NonZeroU8;
 use regex::Regex;
-
-#[derive(Debug, PartialEq)]
-pub(crate) enum ParseError {
-    InvalidDicenumber,
-    InvalidDiceSize,
-    UnableToParse,
-}
-
-#[derive(Debug, PartialEq, Copy, Clone)]
-pub(crate) enum DiceSize {
-    D6,
-}
-
-impl FromStr for DiceSize {
-    type Err = ParseError;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "6" => Ok(DiceSize::D6),
-            _ => Err(ParseError::InvalidDiceSize)
-            }
-        }
-}
-
-
-/// Different die sizes
-impl From<DiceSize> for usize {
-    fn from(d: DiceSize) -> Self {
-        match d {
-            DiceSize::D6 => 6,
-        }
-    }
-}
-
-
-/// A single die, with its' size (amount of faces), requirement value, and if the result shuld be above or below the value.
-#[derive(Debug, PartialEq)]
-pub(crate) struct Die {
-    pub size: DiceSize,
-    pub req_value: usize,
-    pub above_below: String,
-}
-
-
-/// A roll of dice, where the dice in it should be the same, e.g. 3 dice that need to be 4 or more.
-#[derive(Debug, PartialEq)]
-pub(crate) struct Roll {
-    pub dice: Die,
-    pub amount: NonZeroU8,
-}
-
-
-/// All of the dice in the roll
-#[derive(Debug, PartialEq)]
-pub(crate) struct FullRoll {
-    pub rolls: Vec<Roll>,
-    pub total_dice: NonZeroU8,
-}
-
+use crate::die_errors::ParseError;
+use crate::dice::{DiceSize, Roll, DieBuilder, RollBuilder};
 
 /// Parses string to dice and roll.
 /// Input should be in the format <number of dice>x<dice face number>d<wanted number><+/- if the wanted number is higher or lower>
+// After this, there can be anything behind an underscore, this will be tested later
 pub(crate) fn parse_dice_str(dice_str: &str) -> Result<Roll, ParseError> {
     let dice_amount: NonZeroU8;
     let dice_sides: String;
     let dice_min_max: String;
+    let ext_inf: String;
 
-    let dice_regex = Regex::new(r"([1-9]\d*)?x?([1-9]\d*)?d?(\d+)(\+?\-?)").unwrap();
+    let dice_regex = Regex::new(r"([1-9]\d*)?x?([1-9]\d*)?d?(\d+)(\+?\-?)_?(.*)?").unwrap();
     let caps = dice_regex.captures(dice_str).ok_or(ParseError::UnableToParse)?;
     if caps.get(1).is_none() {
     dice_amount = NonZeroU8::new(1).unwrap();
@@ -80,7 +26,7 @@ pub(crate) fn parse_dice_str(dice_str: &str) -> Result<Roll, ParseError> {
             .map_err(|_| {ParseError::InvalidDicenumber})?;
     }
     if caps.get(2).is_none() {
-        dice_sides = "6".to_string();
+        dice_sides = "6".to_string(); //Defaults to D6, maybe should be handled somehow else?
     } else {
         dice_sides = caps.get(2)
             .ok_or(ParseError::InvalidDiceSize)?
@@ -93,21 +39,36 @@ pub(crate) fn parse_dice_str(dice_str: &str) -> Result<Roll, ParseError> {
         .parse::<usize>();
     if caps.get(4).is_none() {
         dice_min_max = "+".to_string();
-    } else {
+    }
+    else {
         dice_min_max = caps.get(4)
             .ok_or(ParseError::UnableToParse)?
             .as_str()
             .parse::<String>().unwrap();
     }
-
-    Ok(Roll {
-        amount: dice_amount,
-        dice: Die {
-            size: DiceSize::from_str(&dice_sides).unwrap(),
-            req_value: dice_req.unwrap(),
-            above_below: dice_min_max,
+    if caps.get(5).is_none(){
+        ext_inf = "".to_string();
     }
-    })
+    else {
+        ext_inf = caps.get(5)
+        .ok_or(ParseError::UnableToParse)?
+        .as_str()
+        .parse::<String>().unwrap();
+    }
+
+    //Build output struct
+    let output_die = DieBuilder::default()
+        .size(DiceSize::from_str(&dice_sides).unwrap())
+        .req_value(dice_req.unwrap())
+        .above_below(dice_min_max)
+        .build().unwrap();
+    let output = RollBuilder::default()
+        .amount(dice_amount)
+        .dice(output_die)
+        .extra_info(ext_inf.clone())
+        .build().unwrap();
+
+    Ok(output)
 }
 
 
@@ -117,26 +78,15 @@ mod tests {
 
     #[test]
     fn test_parse_dice_str() {
-        let foo = Roll {
-            amount: NonZeroU8::new(3).unwrap(),
-            dice: Die {
-                size: DiceSize::from_str("6").unwrap(),
-                req_value: 5,
-                above_below: "+".to_string(),
-            }
-        };
+        let mut test_die = DieBuilder::default().size(DiceSize::from_str("6").unwrap()).req_value(5).above_below("+".to_string()).build().unwrap();
+        let foo = RollBuilder::default().amount(NonZeroU8::new(3).unwrap()).dice(test_die.clone()).build().unwrap();
         let foo2 = parse_dice_str("3x6d5+").unwrap();
         assert_eq!(foo, foo2);
         let foo3 = parse_dice_str("3x5+").unwrap();
         assert_eq!(foo, foo3);
-        let foo4 = Roll {
-            amount: NonZeroU8::new(1).unwrap(),
-            dice: Die {
-                size: DiceSize::from_str("6").unwrap(),
-                req_value: 3,
-                above_below: "-".to_string(),
-            }
-        };
+        test_die.req_value = 3;
+        test_die.above_below = "-".to_string();
+        let foo4 = RollBuilder::default().amount(NonZeroU8::new(1).unwrap()).dice(test_die.clone()).build().unwrap();
         assert_eq!(foo4, parse_dice_str("3-").unwrap());
     }
 }

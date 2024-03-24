@@ -7,6 +7,7 @@ mod calculate_odds;
 mod expected_value;
 mod parse;
 mod die_errors;
+mod dice;
 
 //#[derive(Parser, Debug)]
 //#[command(version, about, long_about=None)]
@@ -20,7 +21,6 @@ mod die_errors;
 
 
 fn main() {
-    println!("Input dice as <amount>x<die face amount>d<wanted value>");
     //let a = Args::parse();
     let mut args: Vec<String> = env::args().collect();
     let mut odds: f64 = 0.0;
@@ -36,11 +36,14 @@ fn main() {
             arguments.push(i.to_string());
         }
     }
-    let mut rolls: Vec<parse::Roll> = vec![];
+    let mut rolls: Vec<dice::Roll> = vec![];
     for arg in &arguments {
         rolls.push(parse::parse_dice_str(arg).unwrap());
     }
     if commands.contains(&"-e".to_string()) {
+        for i in 0..rolls.len() {
+            expected_value::parse_extra_info(&mut rolls[i]);
+        }
         println!("=== Expected value calculation ===");
         println!("This shows only the full amount of successful dice (e.g. no fractions)!");
         println!("Calculating expected value from {}...", arguments.iter().format(" -> "));
@@ -56,26 +59,32 @@ fn main() {
 }
 
 
-fn expected_value_function(rolls: &Vec<parse::Roll>) -> f64 {
+fn expected_value_function(rolls: &Vec<dice::Roll>) -> f64 {
     let mut odds: f64 = 0.0;
     let mut dices: u8;
-    let mut subs_rolls = parse::Roll {
-        dice: parse::Die {
-            size: rolls[0].dice.size.clone(),
-            req_value: rolls[0].dice.req_value,
-            above_below: "+".to_string(),
-        },
-        amount: rolls[0].amount,
-        };
+    let mut buf:u8;
+    let subt_die = dice::DieBuilder::default().size(rolls[0].dice.size.clone()).req_value(rolls[0].dice.req_value).build().unwrap();
+    let mut subs_rolls = dice::RollBuilder::default().dice(subt_die).amount(rolls[0].amount).build().unwrap();
     for i in 0..rolls.len() {
         subs_rolls.dice.req_value = rolls[i].dice.req_value;
         subs_rolls.dice.above_below = rolls[i].dice.above_below.clone();
         odds = expected_value::calculate_expected_amount(&subs_rolls).unwrap();
         dices = odds.round_ties_even() as u8;
+        if rolls[i].re_roll_fail {
+            buf = dices.clone();
+            subs_rolls.amount = NonZeroU8::new(subs_rolls.amount.get() - dices).unwrap();
+            odds = expected_value::calculate_expected_amount(&subs_rolls).unwrap() + buf as f64;
+            dices = odds.round_ties_even() as u8;
+        }
+        subs_rolls.amount = NonZeroU8::new(dices).unwrap();
+        if rolls[i].re_roll_suc {
+            odds = expected_value::calculate_expected_amount(&subs_rolls).unwrap();
+            dices = odds.round_ties_even() as u8;
+            subs_rolls.amount = NonZeroU8::new(dices).unwrap();
+        }
         if dices == 0 {
            return 0.0
         }
-        subs_rolls.amount = NonZeroU8::new(dices).unwrap();
     }
    return odds
 }

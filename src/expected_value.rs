@@ -1,8 +1,9 @@
 #![allow(dead_code)]
 
-use crate::parse::Roll;
+use crate::dice::{Roll};
 use core::result::Result;
-use crate::die_errors::CalcError;
+use crate::die_errors::{ParseError, CalcError};
+use regex::Regex;
 
 pub(crate) fn calculate_expected_amount(roll: &Roll) -> Result<f64, CalcError> {
     let odds: f64;
@@ -28,25 +29,55 @@ pub(crate) fn calculate_expected_amount(roll: &Roll) -> Result<f64, CalcError> {
     Ok(odds)
 }
 
+pub fn parse_extra_info(roll: &mut Roll) -> () {
+    if roll.extra_info.is_empty() {
+        return
+    }
+    let reg = Regex::new("([a-zA-Z][0-9]?)").unwrap();
+    let info = roll.extra_info.clone();
+    let caps = reg.captures(&info).ok_or(ParseError::UnableToParse).unwrap();
+    for i in 0..caps.len() {
+        if caps.get(i).is_some(){
+            let input = caps.get(i).ok_or(ParseError::UnableToParse).unwrap().as_str(); // TODO
+            if input.len() == 1 {
+                //Only letter
+                match input {
+                    "R" => roll.set_reroll_suc(true),
+                    "r" => roll.set_reroll_fail(true),
+                    _ => println!("Urecognized command {}", input),
+                }
+            }
+            else {
+                //Letter and number(s)
+                let (letter, number) = input.split_at(0);
+                match letter {
+                    "R" => {
+                        roll.set_reroll_suc(true);
+                        roll.set_reroll_face_amount(number.parse::<i32>().unwrap().try_into().unwrap());
+                    },
+                    "r" => {
+                        roll.set_reroll_fail(true);
+                        roll.set_reroll_face_amount(number.parse::<i32>().unwrap().try_into().unwrap());
+                    },
+                    _ => println!("Unrecognized command: {}", letter), // TODO
+
+            }
+        }
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests{
     use super::*;
-    use crate::parse::{DiceSize, Die};
+    use crate::dice::{DiceSize, DieBuilder, RollBuilder};
     use std::num::NonZeroU8;
 
     #[test]
     fn test_calculate_expected_value() {
         //Check that simple calculation works
-        let test_die = Die {
-            size: DiceSize::D6,
-            req_value: 4,
-            above_below: "+".to_string(),
-        };
-        let mut test_roll = Roll {
-            dice: test_die,
-            amount: NonZeroU8::new(4).unwrap(),
-        };
+        let test_die = DieBuilder::default().size(DiceSize::D6).req_value(4).build().unwrap();
+        let mut test_roll = RollBuilder::default().dice(test_die).amount(NonZeroU8::new(4).unwrap()).build().unwrap();
         //Test with 4 dice, 4 or more (1/2)
         assert_eq!(calculate_expected_amount(&test_roll).unwrap(), 2.0);
 
@@ -60,4 +91,14 @@ mod tests{
         assert_eq!(calculate_expected_amount(&test_roll).unwrap(), 2.5);
     }
 
+    #[test]
+    fn test_parse_extra_info() {
+        let test_die = DieBuilder::default().size(DiceSize::D6).req_value(4).build().unwrap();
+        let mut test_roll = RollBuilder::default().dice(test_die.clone())
+            .amount(NonZeroU8::new(4).unwrap()).extra_info("r".to_string()).build().unwrap();
+        let test_roll1 = RollBuilder::default().dice(test_die.clone())
+            .amount(NonZeroU8::new(4).unwrap()).re_roll_fail(true).extra_info("r".to_string()).build().unwrap();
+        parse_extra_info(&mut test_roll);
+        assert_eq!(test_roll, test_roll1);
+    }
 }
