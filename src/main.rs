@@ -76,6 +76,9 @@ fn expected_value_function(rolls: &Vec<dice::Roll>) -> f64 {
             odds = expected_value::calculate_expected_amount(&subs_rolls).unwrap() + buf as f64;
             dices = odds.round_ties_even() as u8;
         }
+        if dices == 0 {
+            return 0.0
+        }
         subs_rolls.amount = NonZeroU8::new(dices).unwrap();
         if rolls[i].re_roll_suc {
             odds = expected_value::calculate_expected_amount(&subs_rolls).unwrap();
