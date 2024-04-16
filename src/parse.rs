@@ -89,4 +89,11 @@ mod tests {
         let foo4 = RollBuilder::default().amount(NonZeroU8::new(1).unwrap()).dice(test_die.clone()).build().unwrap();
         assert_eq!(foo4, parse_dice_str("3-").unwrap());
     }
+    #[test]
+    fn test_parse_dice_str_die_sizes() {
+        let test_die1 = DieBuilder::default().size(DiceSize::from_str("12").unwrap()).req_value(8).above_below("+".to_string()).build().unwrap();
+        let foo4 = RollBuilder::default().amount(NonZeroU8::new(3).unwrap()).dice(test_die1.clone()).build().unwrap();
+        let foo5 = parse_dice_str("3x12d8+").unwrap();
+        assert_eq!(foo4, foo5);
+    }
 }
