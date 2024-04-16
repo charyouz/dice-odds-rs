@@ -8,6 +8,7 @@ use core::num::NonZeroU8;
 pub(crate) enum DiceSize {
     D3,
     D6,
+    D12,
 }
 
 impl FromStr for DiceSize {
@@ -16,6 +17,7 @@ impl FromStr for DiceSize {
         match s {
             "3" => Ok(DiceSize::D3),
             "6" => Ok(DiceSize::D6),
+            "12"=> Ok(DiceSize::D12),
             _ => Err(ParseError::InvalidDiceSize)
             }
         }
@@ -27,6 +29,7 @@ impl From<DiceSize> for usize {
         match d {
             DiceSize::D3 => 3,
             DiceSize::D6 => 6,
+            DiceSize::D12 => 12,
         }
     }
 }

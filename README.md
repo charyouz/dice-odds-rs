@@ -15,7 +15,7 @@ All rolls should be in the form of <amount of dice>x<die faces>d<wanted number><
 To call this run the program with he "-e" option, followed by the rolls you want.
 
 For example "2xd64+" means you are rolling 2 dice that have 6 sides (e.g., D6) and you want 4+ (e.g., 4, 5 or 6).
-Another example: "3x6d5-" means 3 dice that have 6 sides and you want less than 5 (e.g. 4, 3, 2 or 1). note that the minus is exclusive,
+Another example: "3x6d5-" means 3 dice that have 6 sides and you want less than 5 (e.g. 4, 3, 2 or 1). Note that the minus is exclusive,
 while the plus is inclusive.
 
 You can also chain the rolls:
@@ -35,7 +35,7 @@ So a command to roll 8 6-sided dice for 4+ and re-rolling failing would be:
 
 if you want to continue the logic, rolling the dice again for 4+ and re-rolling successes would be:
 ```
-8x6d4+_r 4+_R
+8x6d4+_r d4+_R
 ```
 
 ## Getting Started
@@ -46,5 +46,5 @@ To build from source, download the program and build using "cargo build"
 
 ## Roadmap
 
-- [ ] Add more die sizes (D3, D12 for a start).
-- [ ] Add options for re-rolling failing dice.
+- [x] Add more die sizes (D3, D12 for a start).
+- [x] Add options for re-rolling failing dice.

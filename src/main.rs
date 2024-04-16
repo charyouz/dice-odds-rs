@@ -45,7 +45,7 @@ fn main() {
             expected_value::parse_extra_info(&mut rolls[i]);
         }
         println!("=== Expected value calculation ===");
-        println!("This shows only the full amount of successful dice (e.g. no fractions)!");
+        println!("This shows only the full amount of successful dice (e.g. no fractions except on the last roll)!");
         println!("Calculating expected value from {}...", arguments.iter().format(" -> "));
         output = "Expected number of successful dice:".to_string();
         odds = expected_value_function(&rolls);
@@ -75,6 +75,9 @@ fn expected_value_function(rolls: &Vec<dice::Roll>) -> f64 {
             subs_rolls.amount = NonZeroU8::new(subs_rolls.amount.get() - dices).unwrap();
             odds = expected_value::calculate_expected_amount(&subs_rolls).unwrap() + buf as f64;
             dices = odds.round() as u8;
+        }
+        if dices == 0 {
+            return 0.0
         }
         subs_rolls.amount = NonZeroU8::new(dices).unwrap();
         if rolls[i].re_roll_suc {
