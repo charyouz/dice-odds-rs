@@ -8,6 +8,8 @@ Calculates odds for dice. Slowly building this software, but idea is to input th
 want to roll, and the program would output the odds of succeeding, or the expected amount of dice that
 will succeed.
 
+The version history, as well as changes, can be found in the [Changelog](/CHANGELOG.md).
+
 ## Usage
 
 Currently, the main usage is for the expected values (e.g., amount of dice * odds for success of single die).
