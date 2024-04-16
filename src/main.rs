@@ -45,7 +45,7 @@ fn main() {
             expected_value::parse_extra_info(&mut rolls[i]);
         }
         println!("=== Expected value calculation ===");
-        println!("This shows only the full amount of successful dice (e.g. no fractions)!");
+        println!("This shows only the full amount of successful dice (e.g. no fractions except on the last roll)!");
         println!("Calculating expected value from {}...", arguments.iter().format(" -> "));
         output = "Expected number of successful dice:".to_string();
         odds = expected_value_function(&rolls);
